@@ -1,0 +1,523 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>世界时钟 - 跨国工作助手 | 数字时钟与工作时间对照</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', 'Inter', system-ui, -apple-system, 'Roboto', monospace;
+        }
+
+        body {
+            background: linear-gradient(145deg, #0a0f1e 0%, #0c1222 100%);
+            min-height: 100vh;
+            padding: 2rem 1.5rem;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        /* 主容器 */
+        .dashboard {
+            max-width: 1400px;
+            width: 100%;
+            margin: 0 auto;
+        }
+
+        /* 头部 */
+        .header {
+            text-align: center;
+            margin-bottom: 2.5rem;
+        }
+
+        .header h1 {
+            font-size: 2rem;
+            font-weight: 600;
+            background: linear-gradient(135deg, #E0E7FF, #A5B4FC);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            letter-spacing: -0.3px;
+        }
+
+        .header p {
+            color: #8E9AAF;
+            margin-top: 0.5rem;
+            font-size: 0.95rem;
+            border-bottom: 1px dashed #2a3246;
+            display: inline-block;
+            padding-bottom: 0.3rem;
+        }
+
+        /* 电子时钟网格 */
+        .clocks-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 3rem;
+        }
+
+        /* 卡片样式 - 玻璃质感 */
+        .time-card {
+            background: rgba(18, 25, 45, 0.75);
+            backdrop-filter: blur(12px);
+            border-radius: 2rem;
+            border: 1px solid rgba(72, 87, 118, 0.4);
+            padding: 1.5rem 1.2rem;
+            transition: transform 0.2s ease, box-shadow 0.2s;
+            box-shadow: 0 12px 28px -8px rgba(0, 0, 0, 0.4);
+        }
+
+        .time-card:hover {
+            transform: translateY(-4px);
+            border-color: rgba(129, 140, 248, 0.6);
+            box-shadow: 0 20px 32px -12px rgba(79, 70, 229, 0.2);
+        }
+
+        .city-name {
+            font-size: 1.6rem;
+            font-weight: 600;
+            color: #F0F3FA;
+            letter-spacing: -0.5px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 1rem;
+        }
+
+        .city-name span {
+            font-size: 1.8rem;
+        }
+
+        .timezone-badge {
+            font-size: 0.75rem;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 0.2rem 0.7rem;
+            border-radius: 40px;
+            font-weight: normal;
+            color: #B9C7E4;
+        }
+
+        /* 电子数字时钟核心 */
+        .digital-clock {
+            font-family: 'JetBrains Mono', 'Fira Code', 'Courier New', monospace;
+            font-size: 3.2rem;
+            font-weight: 500;
+            letter-spacing: 4px;
+            background: #01020b;
+            padding: 0.6rem 1rem;
+            border-radius: 1.5rem;
+            display: inline-block;
+            width: 100%;
+            text-align: center;
+            color: #6CFFD6;
+            text-shadow: 0 0 5px #1affb2;
+            box-shadow: inset 0 1px 4px rgba(0,0,0,0.6), 0 1px 0 rgba(255,255,255,0.05);
+            margin-bottom: 0.75rem;
+            border: 1px solid #2c354b;
+        }
+
+        .date-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            margin-top: 0.5rem;
+            font-size: 0.85rem;
+            color: #9aa9c1;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .weekday {
+            background: #1f2a44;
+            padding: 0.2rem 0.8rem;
+            border-radius: 24px;
+            font-weight: 500;
+            color: #cbd5ff;
+        }
+
+        .offset-info {
+            font-family: monospace;
+            font-size: 0.75rem;
+            background: rgba(0,0,0,0.4);
+            border-radius: 16px;
+            padding: 0.2rem 0.6rem;
+        }
+
+        /* 工作时间对照表区域 */
+        .timezone-table-section {
+            background: rgba(10, 16, 28, 0.8);
+            backdrop-filter: blur(4px);
+            border-radius: 2rem;
+            padding: 1.5rem 1.8rem;
+            border: 1px solid #2d374b;
+            margin-top: 0.5rem;
+        }
+
+        .section-title {
+            font-size: 1.4rem;
+            font-weight: 600;
+            color: #E2E8F0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 1.2rem;
+            border-left: 4px solid #4f7df3;
+            padding-left: 1rem;
+        }
+
+        .section-title i {
+            font-style: normal;
+            font-size: 1.5rem;
+        }
+
+        .table-wrapper {
+            overflow-x: auto;
+            border-radius: 1.2rem;
+        }
+
+        .work-hours-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.9rem;
+            min-width: 560px;
+        }
+
+        .work-hours-table th {
+            text-align: left;
+            padding: 1rem 0.8rem;
+            background: #111a2b;
+            color: #bfc9e6;
+            font-weight: 600;
+            border-bottom: 1px solid #2a3650;
+        }
+
+        .work-hours-table td {
+            padding: 0.9rem 0.8rem;
+            border-bottom: 1px solid #1e2740;
+            color: #eef2ff;
+        }
+
+        .work-hours-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .region-name {
+            font-weight: 600;
+            color: #c0e0ff;
+        }
+
+        .local-time-range {
+            font-family: monospace;
+            font-weight: 500;
+            background: #0f1422;
+            display: inline-block;
+            padding: 0.2rem 0.6rem;
+            border-radius: 20px;
+            font-size: 0.85rem;
+        }
+
+        .china-time-range {
+            font-family: monospace;
+            font-weight: 600;
+            color: #FFD966;
+            background: #2a2418;
+            padding: 0.2rem 0.6rem;
+            border-radius: 20px;
+            display: inline-block;
+        }
+
+        .note {
+            margin-top: 1.2rem;
+            font-size: 0.75rem;
+            color: #7e8aa8;
+            text-align: center;
+            border-top: 1px solid #25304a;
+            padding-top: 1rem;
+        }
+
+        .highlight {
+            color: #6CFFD6;
+        }
+
+        footer {
+            margin-top: 2rem;
+            text-align: center;
+            font-size: 0.7rem;
+            color: #49587a;
+        }
+
+        @media (max-width: 680px) {
+            body {
+                padding: 1rem;
+            }
+            .digital-clock {
+                font-size: 2.2rem;
+                letter-spacing: 2px;
+            }
+            .city-name {
+                font-size: 1.3rem;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="dashboard">
+    <div class="header">
+        <h1>🌍 跨国工作时钟 · 数字时刻表</h1>
+        <p>中国 · 香港 · 新加坡 · 美国东部 · 美国西部 · 英国伦敦 | 电子时钟 + 工作时段换算</p>
+    </div>
+
+    <!-- 电子时钟网格 -->
+    <div class="clocks-grid" id="clocksContainer"></div>
+
+    <!-- 工作时间对照表: 当地9:00-17:00 对应 中国时间 -->
+    <div class="timezone-table-section">
+        <div class="section-title">
+            <i>⏲️</i> 国际工作时间对照 (当地标准办公时间 09:00 – 17:00)
+        </div>
+        <div class="table-wrapper">
+            <table class="work-hours-table" id="timezoneTable">
+                <thead>
+                <tr><th>地区 / 时区</th><th>当地办公时间 (9AM - 5PM)</th><th>🇨🇳 对应中国时间 (北京时间)</th></tr>
+                </thead>
+                <tbody id="tableBody">
+                    <!-- 动态js填充，保证时区偏移实时计算，但UTC偏移相对固定，不过也会处理夏令时影响显示 -->
+                </tbody>
+            </table>
+        </div>
+        <div class="note">
+            💡 基于当前时区规则 (含夏令时影响，美英注意)。<strong class="highlight">电子时钟实时刷新</strong>，工作时段映射根据当前UTC偏移自动计算，帮助您挑选合适时间联系。
+        </div>
+    </div>
+    <footer>⚡ 数据实时同步 | 数字模式快速读取 | 适合跨时区协作</footer>
+</div>
+
+<script>
+    // --------------------------------------------------------------
+    // 定义城市列表：用于电子时钟 + 工作时区映射
+    // 每个条目包含: 显示名称, IANA时区, 城市英文简称(emoji可自定义)
+    // --------------------------------------------------------------
+    const cities = [
+        { name: "🇨🇳 中国 · 北京", timezone: "Asia/Shanghai", key: "china" },
+        { name: "🇭🇰 中国香港", timezone: "Asia/Hong_Kong", key: "hongkong" },
+        { name: "🇸🇬 新加坡", timezone: "Asia/Singapore", key: "singapore" },
+        { name: "🇺🇸 美国东部 (纽约/华盛顿)", timezone: "America/New_York", key: "useastern" },
+        { name: "🇺🇸 美国西部 (洛杉矶/旧金山)", timezone: "America/Los_Angeles", key: "uswestern" },
+        { name: "🇬🇧 英国伦敦", timezone: "Europe/London", key: "london" }
+    ];
+
+    // 为了工作时间表更清晰，额外存储一个友好地区名称以及对应的时区id
+    // 工作时间表 使用同一组时区，但“中国”单独显示为对照基准（北京时区）
+    // 工作时间映射函数: 给定目标时区，计算出当地 09:00 和 17:00 分别对应北京时间的几点几分（同一天或跨日）
+    // 由于北京时间 = UTC+8, 任意时区偏移 = offsetMinutes (相对于UTC)
+    // 返回 { startHour, startMin, endHour, endMin, 以及格式化字符串 }
+    
+    // 辅助函数: 获取某个时区的当前UTC偏移（分钟），同时可以用于时间转换
+    // 但为了精确计算办公时段映射，我们需要基于“今天”标准时间规则, 使用Temporal? 为了兼容性直接用Date + toLocaleString构造偏移
+    // 更好的办法：获取某个时区指定本地时间的UTC时刻，然后转换回北京时间的显示。
+    // 实现思路：对于给定时区，构造一个本地时间 2024/01/01 09:00:00 在该时区的绝对毫秒数，然后转成北京时间字符串。
+    // 但需注意夏令时边界会导致不同日期映射不同，但对于工作日9-17点我们展示当前时区规则下的映射（动态跟随夏令时）
+    // 实际上同一时区偏移可能会因为日期不同而改变（夏令时），所以我们基于“今日”的偏移来算更符合实际沟通： 即如果今天美国东部是夏令时，那么它的9点对应北京几点。
+    // 这样展示更精确反映当下时段联系是否合适。
+    function getTimezoneOffsetMinutes(timezoneId, referenceDate = new Date()) {
+        // 通过构造一个该时区的本地时间字符串来获取UTC偏移
+        // 方法: 利用 Intl.DateTimeFormat 得到该时区下的年月日时分，然后构建一个伪日期计算出差值。
+        const formatter = new Intl.DateTimeFormat('en-US', {
+            timeZone: timezoneId,
+            year: 'numeric', month: '2-digit', day: '2-digit',
+            hour: '2-digit', minute: '2-digit', second: '2-digit',
+            hour12: false
+        });
+        const parts = formatter.formatToParts(referenceDate);
+        const dateMap = {};
+        for (const part of parts) {
+            dateMap[part.type] = part.value;
+        }
+        const localStr = `${dateMap.year}-${dateMap.month}-${dateMap.day}T${dateMap.hour}:${dateMap.minute}:${dateMap.second}`;
+        const localDate = new Date(localStr);
+        // 本地时区解析出来的时间戳和原referenceDate的utc时间戳差值就是时区偏移（注意符号）
+        // 更可靠: 构造该时区的时间对应的UTC时间戳。偏移分钟 = (localDate.getTime() - referenceDate.getTime()) / 60000
+        // 但localDate可能会因为本地时区不同而造成偏差，实际上我们可以直接使用 getTimezoneOffset 变通：使用Date.UTC方式复杂。
+        // 为了避免混乱，使用更精确方法: 用原生Date计算偏移（国际规范）。
+        const utcDate = new Date(referenceDate.toLocaleString('en-US', { timeZone: 'UTC' }));
+        const tzDate = new Date(referenceDate.toLocaleString('en-US', { timeZone: timezoneId }));
+        const offset = (tzDate.getTime() - utcDate.getTime()) / 60000;
+        return offset;
+    }
+
+    // 根据时区和指定本地时间（小时，分钟）获取对应北京时间的时刻字符串 (HH:MM)
+    // 返回 { hour24, minute, 格式化字符串 }
+    function getBeijingTimeFromLocalTime(timezoneId, localHour, localMinute = 0, baseDate = new Date()) {
+        // 构造一个基于 baseDate 年月日 的本地时间日期对象（时区为指定时区）
+        // 获取该时区的年/月/日
+        const formatter = new Intl.DateTimeFormat('en-US', {
+            timeZone: timezoneId,
+            year: 'numeric', month: '2-digit', day: '2-digit'
+        });
+        const parts = formatter.formatToParts(baseDate);
+        let year, month, day;
+        for (const p of parts) {
+            if (p.type === 'year') year = parseInt(p.value);
+            if (p.type === 'month') month = parseInt(p.value);
+            if (p.type === 'day') day = parseInt(p.value);
+        }
+        // 构造一个该时区的本地时间字符串 (使用带时间的ISO格式容易出错，手动构造一个Date对象UTC方式)
+        // 关键: 创建该时区指定本地时间的绝对时间 (UTC时间戳)
+        const localDateTimeString = `${year}-${month.toString().padStart(2,'0')}-${day.toString().padStart(2,'0')}T${localHour.toString().padStart(2,'0')}:${localMinute.toString().padStart(2,'0')}:00`;
+        // 使用toLocaleString得到该时间字符串在目标时区对应的UTC时间? 更可靠的方法: 利用new Date 以及 时区偏移计算
+        // 简单方法：利用Date.UTC 以及目标时区偏移差计算，容易错。更稳健：使用Intl.DateTimeFormat 格式化成ISO字符串再解析
+        // 替代: 使用new Date(localDateTimeString)会被本地时区干扰，不可靠。
+        // 方法：借助Temporal? 没有, 我们用另一种偏移计算: 先知道此时区的偏移offsetMin，然后目标本地时间戳 = (本地时间的UTC假想值) - offsetMin
+        // 但本地日期要正确处理边界， 构建一个看起来是UTC的假时间，然后减去偏移即可。
+        const fakeUtc = Date.UTC(year, month-1, day, localHour, localMinute, 0);
+        const tzOffset = getTimezoneOffsetMinutes(timezoneId, baseDate);
+        const targetTimestamp = fakeUtc - tzOffset * 60000;
+        const beijingDate = new Date(targetTimestamp);
+        const beijingHour = beijingDate.getHours();
+        const beijingMinute = beijingDate.getMinutes();
+        return { hour: beijingHour, minute: beijingMinute, str: `${beijingHour.toString().padStart(2,'0')}:${beijingMinute.toString().padStart(2,'0')}` };
+    }
+
+    // 更新整个页面: 电子时钟 & 工作时间映射表
+    function updateAllClocksAndTable() {
+        const container = document.getElementById('clocksContainer');
+        if (!container) return;
+        const now = new Date();
+        // 生成每个城市的电子时钟html
+        let clocksHtml = '';
+        for (const city of cities) {
+            // 获取当前时区时间
+            const formatterTime = new Intl.DateTimeFormat('zh-CN', {
+                timeZone: city.timezone,
+                hour12: false,
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit'
+            });
+            const formatterDate = new Intl.DateTimeFormat('zh-CN', {
+                timeZone: city.timezone,
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit',
+                weekday: 'short'
+            });
+            const timeStr = formatterTime.format(now);
+            const dateObj = formatterDate.formatToParts(now);
+            let year='', month='', day='', weekday='';
+            for (const part of dateObj) {
+                if(part.type === 'year') year = part.value;
+                if(part.type === 'month') month = part.value;
+                if(part.type === 'day') day = part.value;
+                if(part.type === 'weekday') weekday = part.value;
+            }
+            const fullDate = `${year}.${month}.${day} ${weekday}`;
+            // 获取时区偏移描述
+            const offsetMin = getTimezoneOffsetMinutes(city.timezone, now);
+            const offsetHours = offsetMin / 60;
+            const offsetSign = offsetHours >= 0 ? `UTC+${offsetHours}` : `UTC${offsetHours}`;
+            clocksHtml += `
+                <div class="time-card">
+                    <div class="city-name">
+                        <span>${city.name.split(' ')[0]}</span> 
+                        <span class="timezone-badge">${offsetSign.replace(/\.0$/,'')}</span>
+                    </div>
+                    <div class="digital-clock">${timeStr}</div>
+                    <div class="date-info">
+                        <span>📅 ${fullDate}</span>
+                        <span class="offset-info">🌍 ${city.timezone.split('/')[1] || city.timezone}</span>
+                    </div>
+                </div>
+            `;
+        }
+        container.innerHTML = clocksHtml;
+
+        // ---------- 更新工作时间对照表 (基于当前时区规则, 动态显示当地9-17点对应北京时间范围) ----------
+        // 表头固定，动态计算每一行数据: 除了中国以外，其他所有地区展示当地9-17对应北京区间
+        // 中国行显示标准办公时间09:00-17:00 (北京时间)
+        const tableBody = document.getElementById('tableBody');
+        if (!tableBody) return;
+        let rowsHtml = '';
+        // 中国单独行
+        rowsHtml += `
+            <tr>
+                <td class="region-name">🇨🇳 中国 (北京时间)</td>
+                <td><span class="local-time-range">09:00 - 17:00</span></td>
+                <td><span class="china-time-range">09:00 - 17:00 (基准)</span></td>
+            </tr>
+        `;
+        // 其他地区 (香港, 新加坡, 美东, 美西, 伦敦)
+        const otherRegions = cities.filter(c => c.key !== 'china');
+        for (const region of otherRegions) {
+            // 计算当地9:00对应的北京时间
+            const startBeijing = getBeijingTimeFromLocalTime(region.timezone, 9, 0, now);
+            const endBeijing = getBeijingTimeFromLocalTime(region.timezone, 17, 0, now);
+            const startStr = startBeijing.str;
+            const endStr = endBeijing.str;
+            let beijingRange = `${startStr} - ${endStr}`;
+            // 如果跨天需要特别标注 (比如美国西部夏季对应北京时间次日凌晨)，通过比较start和end的hour数值以及跨日判断
+            // 简单逻辑: 如果 endBeijing 数值小于 startBeijing (考虑分钟组合)，或者 endBeijing.hour < startBeijing.hour 有可能跨日
+            let crossDayNote = '';
+            const startTotal = startBeijing.hour * 60 + startBeijing.minute;
+            const endTotal = endBeijing.hour * 60 + endBeijing.minute;
+            if (endTotal < startTotal) {
+                crossDayNote = ' (次日)';
+            } else if (endTotal === startTotal && endBeijing.minute === startBeijing.minute) {
+                // 罕见情况
+            }
+            // 特殊处理 美国西部等会有跨日，让用户醒目
+            let finalRange = beijingRange + crossDayNote;
+            // 格式化显示当地名称
+            let displayRegionName = region.name;
+            if (region.key === 'useastern') displayRegionName = "🇺🇸 美国东部 (纽约/华盛顿)";
+            if (region.key === 'uswestern') displayRegionName = "🇺🇸 美国西部 (洛杉矶/旧金山)";
+            if (region.key === 'london') displayRegionName = "🇬🇧 英国伦敦";
+            if (region.key === 'hongkong') displayRegionName = "🇭🇰 中国香港";
+            if (region.key === 'singapore') displayRegionName = "🇸🇬 新加坡";
+            
+            rowsHtml += `
+                <tr>
+                    <td class="region-name">${displayRegionName}</td>
+                    <td><span class="local-time-range">09:00 - 17:00</span></td>
+                    <td><span class="china-time-range">${finalRange}</span></td>
+                </tr>
+            `;
+        }
+        // 额外优化: 美东/美西/伦敦 可标注夏时令影响小提示：在表下行添加额外消息但没必要，用户可看动态更新
+        tableBody.innerHTML = rowsHtml;
+        
+        // 动态补充一个脚注说明夏令时感知 (可选)
+        const existingNote = document.querySelector('.timezone-table-section .note');
+        if (existingNote && !existingNote.hasAttribute('data-dynamic')) {
+            // 保留原有内容，添加额外实时说明
+            const nowDate = new Date();
+            const options = { timeZone: "America/New_York", month: 'short', day: 'numeric' };
+            const easternDate = new Intl.DateTimeFormat('en-US', options).format(nowDate);
+            existingNote.innerHTML = `💡 基于当前时区规则 (含夏令时影响，美英注意)。<strong class="highlight">电子时钟实时刷新</strong>，工作时段映射根据当前UTC偏移自动计算，帮助您挑选合适时间联系。<span style="display:inline-block; margin-left:8px;">🕒 映射动态参考: 若含“次日”表示当地下午对应北京次日凌晨</span>`;
+            existingNote.setAttribute('data-dynamic', 'true');
+        }
+    }
+
+    // 初始化加载，并每秒刷新时间显示和表格（表格虽偏移相对固定，但夏令时切换日会变化，所以也实时更新）
+    let intervalId = null;
+    function startClock() {
+        updateAllClocksAndTable();
+        if (intervalId) clearInterval(intervalId);
+        intervalId = setInterval(() => {
+            updateAllClocksAndTable();
+        }, 1000);
+    }
+
+    // 页面启动
+    startClock();
+    // 确保页面可见性变化时无需额外操作，保持刷新
+    window.addEventListener('beforeunload', () => {
+        if (intervalId) clearInterval(intervalId);
+    });
+</script>
+</body>
+</html>
